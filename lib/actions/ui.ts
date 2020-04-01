@@ -209,7 +209,7 @@ export function moveTo(i: number | 'last') {
       const {termGroups} = getState().termGroups;
       i =
         Object.keys(termGroups)
-          .map(uid => termGroups[uid])
+          .map((uid) => termGroups[uid])
           .filter(({parentUid}) => !parentUid).length - 1;
     }
     dispatch({
@@ -325,7 +325,7 @@ export function execCommand(command: string, fn: (...args: any[]) => void, e: an
       command,
       effect() {
         if (fn) {
-          fn(e);
+          fn(e, dispatch);
         } else {
           rpc.emit('command', command);
         }
