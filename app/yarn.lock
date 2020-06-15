@@ -161,10 +161,10 @@ electron-squirrel-startup@1.0.0:
   dependencies:
     debug "^2.2.0"
 
-electron-store@5.1.1:
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/electron-store/-/electron-store-5.1.1.tgz#3040e5b4ad25d2e4caea59d505646c1e7c94a09b"
-  integrity sha512-FLidOVE8JVCdJXHd7xY/JojKJ2r2WNmWt0O/LlX2LuSVV7dkG2RSy2/Gm2LFw8OKDfrNBd9c/s4X1ikMrJEUKg==
+electron-store@5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/electron-store/-/electron-store-5.2.0.tgz#a15718fc1fa21acfd07af55f9b94f9fa6a536665"
+  integrity sha512-iU3WDqEDAYNYR9XV7p0tJajq/zs9z7Nrn0sAoR5nDyn8h/9dr9kusKbTxD8NtVEBD1TB1pkGMqcbIt/y6knDwQ==
   dependencies:
     conf "^6.2.1"
     type-fest "^0.7.1"
@@ -238,10 +238,10 @@ find-up@^3.0.0:
   dependencies:
     locate-path "^3.0.0"
 
-fs-extra@9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-9.0.0.tgz#b6afc31036e247b2466dc99c29ae797d5d4580a3"
-  integrity sha512-pmEYSk3vYsG/bF651KPUXZ+hvjpgWYw/Gc7W9NFUe3ZVLczKKWIij3IKpOrQcdw4TILtibFslZ0UmR8Vvzig4g==
+fs-extra@9.0.1:
+  version "9.0.1"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-9.0.1.tgz#910da0062437ba4c39fedd863f1675ccfefcb9fc"
+  integrity sha512-h2iAoN838FqAFJY2/qVpzFXy+EBxfVE220PalAqQLDVsFOHLJrZvut5puAbCdNv6WJk+B8ihI+k0c7JK5erwqQ==
   dependencies:
     at-least-node "^1.0.0"
     graceful-fs "^4.2.0"
