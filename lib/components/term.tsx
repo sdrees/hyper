@@ -5,6 +5,7 @@ import {WebLinksAddon} from 'xterm-addon-web-links';
 import {SearchAddon} from 'xterm-addon-search';
 import {WebglAddon} from 'xterm-addon-webgl';
 import {LigaturesAddon} from 'xterm-addon-ligatures';
+import {Unicode11Addon} from 'xterm-addon-unicode11';
 import {clipboard, shell} from 'electron';
 import Color from 'color';
 import terms from '../terms';
@@ -131,7 +132,7 @@ export default class Term extends React.PureComponent<TermProps> {
 
     if (!props.term) {
       const needTransparency = Color(props.backgroundColor).alpha() < 1;
-      const useWebGL = false;
+      let useWebGL = false;
       if (props.webGLRenderer) {
         if (needTransparency) {
           console.warn(
@@ -143,7 +144,7 @@ export default class Term extends React.PureComponent<TermProps> {
         } else {
           // Experimental WebGL renderer needs some more glue-code to make it work on Hyper.
           // If you're working on enabling back WebGL, you will also need to look into `xterm-addon-ligatures` support for that renderer.
-          // useWebGL = true;
+          useWebGL = true;
         }
       }
       Term.reportRenderer(props.uid, useWebGL ? 'WebGL' : 'Canvas');
@@ -177,6 +178,8 @@ export default class Term extends React.PureComponent<TermProps> {
       if (props.disableLigatures !== true) {
         this.term.loadAddon(new LigaturesAddon());
       }
+      this.term.loadAddon(new Unicode11Addon());
+      this.term.unicode.activeVersion = '11';
     } else {
       // get the cached plugins
       this.fitAddon = props.fitAddon!;

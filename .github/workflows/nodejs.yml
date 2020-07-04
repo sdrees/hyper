@@ -12,7 +12,8 @@ jobs:
       matrix:
         node-version: [12.x]
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -36,7 +37,7 @@ jobs:
           echo "::set-output name=dmgName::$(ls dist/*.dmg | cut -d'/' -f2)"
           echo "::set-output name=dmgPath::$(ls dist/*.dmg)"
       - name: Archive macOS Build Artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getmacosfilename.outputs.dmgName }}
           path: ${{ steps.getmacosfilename.outputs.dmgPath }}
@@ -46,7 +47,8 @@ jobs:
       matrix:
         node-version: [12.x]
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -76,22 +78,22 @@ jobs:
           echo "::set-output name=rpmName::$(ls dist/*.rpm | cut -d'/' -f2)"
           echo "::set-output name=rpmPath::$(ls dist/*.rpm)"
       - name: Archive Linux Build Artifacts (Snap)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getlinuxfilename.outputs.snapName }}
           path: ${{ steps.getlinuxfilename.outputs.snapPath }}
       - name: Archive Linux Build Artifacts (AppImage)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getlinuxfilename.outputs.AppImageName }}
           path: ${{ steps.getlinuxfilename.outputs.AppImagePath }}
       - name: Archive Linux Build Artifacts (Deb)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getlinuxfilename.outputs.debName }}
           path: ${{ steps.getlinuxfilename.outputs.debPath }}
       - name: Archive Linux Build Artifacts (RPM)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getlinuxfilename.outputs.rpmName }}
           path: ${{ steps.getlinuxfilename.outputs.rpmPath }}
@@ -101,7 +103,8 @@ jobs:
       matrix:
         node-version: [12.x]
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -127,12 +130,12 @@ jobs:
           Write-Host "::set-output name=nupkgName::$(Get-ChildItem -Name .\dist\squirrel-windows\ | Select-String nupkg)"
           Write-Host "::set-output name=nupkgPath::dist/squirrel-windows/$(Get-ChildItem -Name .\dist\squirrel-windows\ | Select-String nupkg)"
       - name: Archive Windows Build Artifacts (exe)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getwindowsfilename.outputs.exeName }}
           path: ${{ steps.getwindowsfilename.outputs.exePath }}
       - name: Archive Windows Build Artifacts (nupkg)
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getwindowsfilename.outputs.nupkgName }}
           path: ${{ steps.getwindowsfilename.outputs.nupkgPath }}
