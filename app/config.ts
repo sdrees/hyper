@@ -1,4 +1,4 @@
-import fs from 'fs';
+import chokidar from 'chokidar';
 import notify from './notify';
 import {_import, getDefaultConfig} from './config/import';
 import _openConfig from './config/open';
@@ -9,13 +9,13 @@ import {parsedConfig, configOptions} from '../lib/config';
 
 const watchers: Function[] = [];
 let cfg: parsedConfig = {} as any;
-let _watcher: fs.FSWatcher;
+let _watcher: chokidar.FSWatcher;
 
 export const getDeprecatedCSS = (config: configOptions) => {
   const deprecated: string[] = [];
   const deprecatedCSS = ['x-screen', 'x-row', 'cursor-node', '::selection'];
   deprecatedCSS.forEach((css) => {
-    if ((config.css && config.css.includes(css)) || (config.termCSS && config.termCSS.includes(css))) {
+    if (config.css?.includes(css) || config.termCSS?.includes(css)) {
       deprecated.push(css);
     }
   });
@@ -36,7 +36,7 @@ const checkDeprecatedConfig = () => {
 
 const _watch = () => {
   if (_watcher) {
-    return _watcher;
+    return;
   }
 
   const onChange = () => {
@@ -49,39 +49,11 @@ const _watch = () => {
     }, 100);
   };
 
-  // Windows
-  if (process.platform === 'win32') {
-    // watch for changes on config every 2s on Windows
-    // https://github.com/zeit/hyper/pull/1772
-    _watcher = fs.watchFile(cfgPath, {interval: 2000}, (curr, prev) => {
-      if (!curr.mtime || curr.mtime.getTime() === 0) {
-        console.error('error watching config');
-      } else if (curr.mtime.getTime() !== prev.mtime.getTime()) {
-        onChange();
-      }
-    }) as any;
-    return;
-  }
-  // macOS/Linux
-  function setWatcher() {
-    try {
-      _watcher = fs.watch(cfgPath, (eventType) => {
-        if (eventType === 'rename') {
-          _watcher.close();
-          // Ensure that new file has been written
-          setTimeout(() => setWatcher(), 500);
-        }
-      });
-    } catch (e) {
-      console.error('Failed to watch config file:', cfgPath, e);
-      return;
-    }
-    _watcher.on('change', onChange);
-    _watcher.on('error', (error) => {
-      console.error('error watching config', error);
-    });
-  }
-  setWatcher();
+  _watcher = chokidar.watch(cfgPath);
+  _watcher.on('change', onChange);
+  _watcher.on('error', (error) => {
+    console.error('error watching config', error);
+  });
 };
 
 export const subscribe = (fn: Function) => {
@@ -144,8 +116,8 @@ export const htermConfigTranslate = (config: configOptions) => {
   Object.keys(cssReplacements).forEach((pattern) => {
     const searchvalue = new RegExp(pattern, 'g');
     const newvalue = cssReplacements[pattern];
-    config.css = config.css && config.css.replace(searchvalue, newvalue);
-    config.termCSS = config.termCSS && config.termCSS.replace(searchvalue, newvalue);
+    config.css = config.css?.replace(searchvalue, newvalue);
+    config.termCSS = config.termCSS?.replace(searchvalue, newvalue);
   });
   return config;
 };

@@ -1,5 +1,5 @@
 import {app, BrowserWindow, shell, Menu, BrowserWindowConstructorOptions} from 'electron';
-import {isAbsolute} from 'path';
+import {isAbsolute, normalize, sep} from 'path';
 import {parse as parseUrl} from 'url';
 import {v4 as uuidv4} from 'uuid';
 import fileUriToPath from 'file-uri-to-path';
@@ -24,27 +24,25 @@ export function newWindow(
   const classOpts = Object.assign({uid: uuidv4()});
   app.plugins.decorateWindowClass(classOpts);
 
-  const winOpts = Object.assign(
-    {
-      minWidth: 370,
-      minHeight: 190,
-      backgroundColor: toElectronBackgroundColor(cfg.backgroundColor || '#000'),
-      titleBarStyle: 'hiddenInset',
-      title: 'Hyper.app',
-      // we want to go frameless on Windows and Linux
-      frame: process.platform === 'darwin',
-      transparent: process.platform === 'darwin',
-      icon,
-      show: process.env.HYPER_DEBUG || process.env.HYPERTERM_DEBUG || isDev,
-      acceptFirstMouse: true,
-      webPreferences: {
-        nodeIntegration: true,
-        navigateOnDragDrop: true
-      }
+  const winOpts: BrowserWindowConstructorOptions = {
+    minWidth: 370,
+    minHeight: 190,
+    backgroundColor: toElectronBackgroundColor(cfg.backgroundColor || '#000'),
+    titleBarStyle: 'hiddenInset',
+    title: 'Hyper.app',
+    // we want to go frameless on Windows and Linux
+    frame: process.platform === 'darwin',
+    transparent: process.platform === 'darwin',
+    icon,
+    show: Boolean(process.env.HYPER_DEBUG || process.env.HYPERTERM_DEBUG || isDev),
+    acceptFirstMouse: true,
+    webPreferences: {
+      nodeIntegration: true,
+      navigateOnDragDrop: true,
+      enableRemoteModule: true
     },
-    options_
-  );
-
+    ...options_
+  };
   const window = new BrowserWindow(app.plugins.getDecoratedBrowserOptions(winOpts));
   window.uid = classOpts.uid;
 
@@ -60,9 +58,16 @@ export function newWindow(
   };
 
   // set working directory
+  let argPath = process.argv[1];
+  if (argPath && process.platform === 'win32') {
+    if (/[a-zA-Z]:"/.test(argPath)) {
+      argPath = argPath.replace('"', sep);
+    }
+    argPath = normalize(argPath + sep);
+  }
   let workingDirectory = homeDirectory;
-  if (process.argv[1] && isAbsolute(process.argv[1])) {
-    workingDirectory = process.argv[1];
+  if (argPath && isAbsolute(argPath)) {
+    workingDirectory = argPath;
   } else if (cfg.workingDirectory && isAbsolute(cfg.workingDirectory)) {
     workingDirectory = cfg.workingDirectory;
   }
