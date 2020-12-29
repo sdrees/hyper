@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,25 +27,35 @@ jobs:
         run: |
           cp build/canary.ico build/icon.ico
           cp build/canary.icns build/icon.icns
+      # - name: Get Certificate for signing
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     echo "::set-env name=CSC_LINK::${{ secrets.MAC_CERT_P12_BASE64 }}"
+      #     echo "::set-env name=CSC_KEY_PASSWORD::${{ secrets.MAC_CERT_P12_PASSWORD }}"
       - name: Build
         run: yarn run dist --publish=never
-        env:
-          CI: true
       - name: Get macOS Artifact Names
         id: getmacosfilename
         run: |
           echo "::set-output name=dmgName::$(ls dist/*.dmg | cut -d'/' -f2)"
           echo "::set-output name=dmgPath::$(ls dist/*.dmg)"
+          echo "::set-output name=armDmgName::$(ls dist/*arm64.dmg | cut -d'/' -f2)"
+          echo "::set-output name=armDmgPath::$(ls dist/*arm64.dmg)"
       - name: Archive macOS Build Artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.getmacosfilename.outputs.dmgName }}
           path: ${{ steps.getmacosfilename.outputs.dmgPath }}
+      - name: Archive macOS arm64 Build Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.getmacosfilename.outputs.armDmgName }}
+          path: ${{ steps.getmacosfilename.outputs.armDmgPath }}
   ci_linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -64,8 +74,6 @@ jobs:
           cp build/canary.icns build/icon.icns
       - name: Build
         run: yarn run dist --publish=never
-        env:
-          CI: true
       - name: Get Linux Artifact Names
         id: getlinuxfilename
         run: |
@@ -101,7 +109,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [12.x]
+        node-version: [14.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -118,10 +126,15 @@ jobs:
         run: |
           Copy-Item .\build\canary.ico .\build\icon.ico
           Copy-Item .\build\canary.icns .\build\icon.icns
-      - name: Build
+      - name: Build (pr)
+        if: github.event_name == 'pull_request'
         run: yarn run dist --publish=never
-        env:
-          CI: true
+      - name: Build (push)
+        if: github.event_name == 'push'
+        run: yarn run dist --publish=never
+        # env:
+          #CSC_LINK: ${{ secrets.WIN_CERT_P12_BASE64 }}
+          #CSC_KEY_PASSWORD: ${{ secrets.WIN_CERT_P12_PASSWORD }}
       - name: Get Windows Artifact Names
         id: getwindowsfilename
         run: |
