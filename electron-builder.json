@@ -46,9 +46,12 @@
   },
   "win": {
     "target": [
-      "squirrel"
+      "nsis"
     ],
     "rfc3161TimeStampServer": "http://timestamp.comodoca.com"
+  },
+  "nsis": {
+    "include": "build/win/installer.nsh"
   },
   "mac": {
     "target": {
@@ -58,6 +61,7 @@
         "arm64"
       ]
     },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "category": "public.app-category.developer-tools",
     "extendInfo": {
       "CFBundleDocumentTypes": [

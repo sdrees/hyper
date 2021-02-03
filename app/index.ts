@@ -9,35 +9,6 @@ if (['--help', '-v', '--version'].includes(process.argv[1])) {
   process.exit();
 }
 
-const checkSquirrel = () => {
-  let squirrel;
-
-  try {
-    squirrel = require('electron-squirrel-startup');
-    //eslint-disable-next-line no-empty
-  } catch (err) {}
-  if (squirrel) {
-    process.exit();
-  }
-};
-
-// handle startup squirrel events
-if (process.platform === 'win32') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const systemContextMenu = require('./system-context-menu');
-
-  switch (process.argv[1]) {
-    case '--squirrel-install':
-    case '--squirrel-updated':
-      systemContextMenu.add();
-      break;
-    case '--squirrel-uninstall':
-      systemContextMenu.remove();
-      break;
-  }
-  checkSquirrel();
-}
-
 // Native
 import {resolve} from 'path';
 
@@ -164,12 +135,6 @@ app.on('ready', () =>
           windowSet.delete(hwin);
         });
 
-        hwin.on('closed', () => {
-          if (process.platform !== 'darwin' && windowSet.size === 0) {
-            app.quit();
-          }
-        });
-
         return hwin;
       }
 
@@ -185,6 +150,12 @@ app.on('ready', () =>
       app.on('activate', () => {
         if (!windowSet.size) {
           createWindow();
+        }
+      });
+
+      app.on('window-all-closed', () => {
+        if (process.platform !== 'darwin') {
+          app.quit();
         }
       });
 
