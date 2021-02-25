@@ -7,7 +7,7 @@ const searchBoxStyling: React.CSSProperties = {
   backgroundColor: 'white',
   position: 'absolute',
   right: '10px',
-  top: '25px',
+  top: '0px',
   width: '224px',
   zIndex: 9999
 };
@@ -32,25 +32,23 @@ export default class SearchBox extends React.PureComponent<SearchBoxProps> {
     return (
       <div style={searchBoxStyling}>
         <input type="text" className="search-box" onKeyUp={this.handleChange} ref={(input) => input?.focus()} />
-        <span className="search-button" onClick={() => this.props.prev(this.searchTerm)}>
-          {' '}
-          &#x2190;{' '}
-        </span>
-        <span className="search-button" onClick={() => this.props.next(this.searchTerm)}>
-          {' '}
-          &#x2192;{' '}
-        </span>
-        <span className="search-button" onClick={() => this.props.close()}>
-          {' '}
-          x{' '}
-        </span>
+        <svg className="search-button" onClick={() => this.props.prev(this.searchTerm)}>
+          <use xlinkHref="./renderer/assets/search-icons.svg#left-arrow" />
+        </svg>
+        <svg className="search-button" onClick={() => this.props.next(this.searchTerm)}>
+          <use xlinkHref="./renderer/assets/search-icons.svg#right-arrow" />
+        </svg>
+        <svg className="search-button" onClick={() => this.props.close()}>
+          <use xlinkHref="./renderer/assets/search-icons.svg#cancel" />
+        </svg>
         <style jsx>
           {`
             .search-box {
               font-size: 18px;
-              padding: 6px;
-              width: 145px;
+              padding: 3px 6px;
+              width: 152px;
               border: none;
+              float: left;
             }
 
             .search-box:focus {
@@ -60,13 +58,16 @@ export default class SearchBox extends React.PureComponent<SearchBoxProps> {
             .search-button {
               background-color: #ffffff;
               color: black;
-              padding: 7px;
+              padding: 7px 5.5px;
               text-align: center;
               text-decoration: none;
               display: inline-block;
               font-size: 16px;
               transition-duration: 0.4s;
               cursor: pointer;
+              height: 27px;
+              width: 24px;
+              float: left;
             }
             .search-button:hover {
               background-color: #e7e7e7;

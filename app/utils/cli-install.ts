@@ -5,9 +5,13 @@ import notify from '../notify';
 import {cliScriptPath, cliLinkPath} from '../config/paths';
 import {Registry, loadRegistry} from './registry';
 import type {ValueType} from 'native-reg';
+import sudoPrompt from 'sudo-prompt';
+import {clipboard, dialog} from 'electron';
+import {mkdirpSync} from 'fs-extra';
 
 const readlink = pify(fs.readlink);
 const symlink = pify(fs.symlink);
+const sudoExec = pify(sudoPrompt.exec, {multiArgs: true});
 
 const checkInstall = () => {
   return readlink(cliLinkPath)
@@ -20,15 +24,51 @@ const checkInstall = () => {
     });
 };
 
-const addSymlink = () => {
-  return checkInstall().then((isInstalled) => {
+const addSymlink = async (silent: boolean) => {
+  try {
+    const isInstalled = await checkInstall();
     if (isInstalled) {
       console.log('Hyper CLI already in PATH');
-      return Promise.resolve();
+      return;
     }
     console.log('Linking HyperCLI');
-    return symlink(cliScriptPath, cliLinkPath);
-  });
+    if (!fs.existsSync(path.dirname(cliLinkPath))) {
+      try {
+        mkdirpSync(path.dirname(cliLinkPath));
+      } catch (err) {
+        throw `Failed to create directory ${path.dirname(cliLinkPath)} - ${err}`;
+      }
+    }
+    await symlink(cliScriptPath, cliLinkPath);
+  } catch (err) {
+    // 'EINVAL' is returned by readlink,
+    // 'EEXIST' is returned by symlink
+    let error =
+      err.code === 'EEXIST' || err.code === 'EINVAL'
+        ? `File already exists: ${cliLinkPath}`
+        : `Symlink creation failed: ${err.code}`;
+    // Need sudo access to create symlink
+    if (err.code === 'EACCES' && !silent) {
+      const result = await dialog.showMessageBox({
+        message: `You need to grant elevated privileges to add Hyper CLI to PATH
+Or you can run
+sudo ln -sf "${cliScriptPath}" "${cliLinkPath}"`,
+        type: 'info',
+        buttons: ['OK', 'Copy Command', 'Cancel']
+      });
+      if (result.response === 0) {
+        try {
+          await sudoExec(`ln -sf "${cliScriptPath}" "${cliLinkPath}"`, {name: 'Hyper'});
+          return;
+        } catch (_error) {
+          error = _error[0];
+        }
+      } else if (result.response === 1) {
+        clipboard.writeText(`sudo ln -sf "${cliScriptPath}" "${cliLinkPath}"`);
+      }
+    }
+    throw error;
+  }
 };
 
 const addBinToUserPath = () => {
@@ -89,35 +129,31 @@ const logNotify = (withNotification: boolean, title: string, body: string, detai
   withNotification && notify(title, body, details);
 };
 
-export const installCLI = (withNotification: boolean) => {
+export const installCLI = async (withNotification: boolean) => {
   if (process.platform === 'win32') {
-    addBinToUserPath()
-      .then(() =>
-        logNotify(
-          withNotification,
-          'Hyper CLI installed',
-          'You may need to restart your computer to complete this installation process.'
-        )
-      )
-      .catch((err) =>
-        logNotify(withNotification, 'Hyper CLI installation failed', `Failed to add Hyper CLI path to user PATH ${err}`)
+    try {
+      await addBinToUserPath();
+      logNotify(
+        withNotification,
+        'Hyper CLI installed',
+        'You may need to restart your computer to complete this installation process.'
       );
-  } else if (process.platform === 'darwin') {
-    addSymlink()
-      .then(() => logNotify(withNotification, 'Hyper CLI installed', `Symlink created at ${cliLinkPath}`))
-      .catch((err) => {
-        // 'EINVAL' is returned by readlink,
-        // 'EEXIST' is returned by symlink
-        const error =
-          err.code === 'EEXIST' || err.code === 'EINVAL'
-            ? `File already exists: ${cliLinkPath}`
-            : `Symlink creation failed: ${err.code}`;
-
-        console.error(err);
-        logNotify(withNotification, 'Hyper CLI installation failed', error);
-      });
+    } catch (err) {
+      logNotify(withNotification, 'Hyper CLI installation failed', `Failed to add Hyper CLI path to user PATH ${err}`);
+    }
+  } else if (process.platform === 'darwin' || process.platform === 'linux') {
+    // AppImages are mounted on run at a temporary path, don't create symlink
+    if (process.env['APPIMAGE']) {
+      console.log('Skipping CLI symlink creation as it is an AppImage install');
+      return;
+    }
+    try {
+      await addSymlink(!withNotification);
+      logNotify(withNotification, 'Hyper CLI installed', `Symlink created at ${cliLinkPath}`);
+    } catch (error) {
+      logNotify(withNotification, 'Hyper CLI installation failed', `${error}`);
+    }
   } else {
-    withNotification &&
-      notify('Hyper CLI installation', 'Command is added in PATH only at package installation. Please reinstall.');
+    logNotify(withNotification, 'Hyper CLI installation failed', `Unsupported platform ${process.platform}`);
   }
 };
