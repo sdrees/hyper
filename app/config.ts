@@ -2,7 +2,6 @@ import chokidar from 'chokidar';
 import notify from './notify';
 import {_import, getDefaultConfig} from './config/import';
 import _openConfig from './config/open';
-import win from './config/windows';
 import {cfgPath, cfgDir} from './config/paths';
 import {getColorMap} from './utils/colors';
 import {parsedConfig, configOptions} from '../lib/config';
@@ -45,7 +44,9 @@ const _watch = () => {
     setTimeout(() => {
       cfg = _import();
       notify('Configuration updated', 'Hyper configuration reloaded!');
-      watchers.forEach((fn) => fn());
+      watchers.forEach((fn) => {
+        fn();
+      });
       checkDeprecatedConfig();
     }, 100);
   };
@@ -59,9 +60,14 @@ const _watch = () => {
   app.on('before-quit', (e) => {
     if (Object.keys(_watcher.getWatched()).length > 0) {
       e.preventDefault();
-      _watcher.close().then(() => {
-        app.quit();
-      });
+      _watcher
+        .close()
+        .catch((err) => {
+          console.warn(err);
+        })
+        .finally(() => {
+          app.quit();
+        });
     }
   });
 };
@@ -103,9 +109,7 @@ export const setup = () => {
   checkDeprecatedConfig();
 };
 
-export const getWin = win.get;
-export const winRecord = win.recordState;
-export const windowDefaults = win.defaults;
+export {get as getWin, recordState as winRecord, defaults as windowDefaults} from './config/windows';
 
 export const fixConfigDefaults = (decoratedConfig: configOptions) => {
   const defaultConfig = getDefaultConfig().config!;

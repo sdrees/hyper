@@ -10,9 +10,11 @@ import {Middleware} from 'redux';
 const effectsMiddleware: Middleware = () => (next) => (action) => {
   const ret = next(action);
   if (action.effect) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     action.effect();
     delete action.effect;
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return ret;
 };
 export default effectsMiddleware;

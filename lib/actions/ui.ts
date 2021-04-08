@@ -29,9 +29,7 @@ import {
 import {setActiveGroup} from './term-groups';
 import parseUrl from 'parse-url';
 import {HyperState, HyperDispatch, HyperActions} from '../hyper';
-import {Stats} from 'fs';
-
-const {stat} = window.require('fs');
+import {stat, Stats} from 'fs';
 
 export function openContextMenu(uid: string, selection: any) {
   return (dispatch: HyperDispatch, getState: () => HyperState) => {
@@ -144,7 +142,7 @@ function moveToNeighborPane(type: typeof UI_MOVE_NEXT_PANE | typeof UI_MOVE_PREV
         if (childGroups.length === 1) {
           console.log('ignoring move for single group');
         } else {
-          const index = getNeighborIndex(childGroups, uid!, type);
+          const index = getNeighborIndex(childGroups, uid, type);
           const {sessionUid} = termGroups.termGroups[childGroups[index]];
           dispatch(setActiveSession(sessionUid!));
         }
@@ -299,9 +297,9 @@ export function openSSH(url: string) {
       type: UI_OPEN_SSH_URL,
       effect() {
         const parsedUrl = parseUrl(url, true);
-        let command = parsedUrl.protocol + ' ' + (parsedUrl.user ? `${parsedUrl.user}@` : '') + parsedUrl.resource;
+        let command = `${parsedUrl.protocol} ${parsedUrl.user ? `${parsedUrl.user}@` : ''}${parsedUrl.resource}`;
 
-        if (parsedUrl.port) command += ' -p ' + parsedUrl.port;
+        if (parsedUrl.port) command += ` -p ${parsedUrl.port}`;
 
         command += '\n';
 

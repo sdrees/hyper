@@ -77,10 +77,14 @@ function installDevExtensions(isDev_: boolean) {
   return Promise.all(extensions.map((name) => installer.default(installer[name], forceDownload)));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 app.on('ready', () =>
   installDevExtensions(isDev)
     .then(() => {
-      function createWindow(fn?: (win: BrowserWindow) => void, options: Record<string, any> = {}) {
+      function createWindow(
+        fn?: (win: BrowserWindow) => void,
+        options: {size?: [number, number]; position?: [number, number]} = {}
+      ) {
         const cfg = plugins.getDecoratedConfig();
 
         const winSet = config.getWin();
@@ -127,7 +131,7 @@ app.on('ready', () =>
 
         const hwin = newWindow({width, height, x: startX, y: startY}, cfg, fn);
         windowSet.add(hwin);
-        hwin.loadURL(url);
+        void hwin.loadURL(url);
 
         // the window can be closed by the browser process itself
         hwin.on('close', () => {
@@ -191,7 +195,7 @@ app.on('ready', () =>
           console.log('Removing Hyper from default client for ssh:// protocol');
           app.removeAsDefaultProtocolClient('ssh');
         }
-        installCLI(false);
+        void installCLI(false);
       }
     })
     .catch((err) => {
@@ -201,7 +205,9 @@ app.on('ready', () =>
 
 app.on('open-file', (event, path) => {
   const lastWindow = app.getLastFocusedWindow();
-  const callback = (win: BrowserWindow) => win.rpc.emit('open file', {path});
+  const callback = (win: BrowserWindow) => {
+    win.rpc.emit('open file', {path});
+  };
   if (lastWindow) {
     callback(lastWindow);
   } else if (!lastWindow && {}.hasOwnProperty.call(app, 'createWindow')) {
@@ -215,7 +221,9 @@ app.on('open-file', (event, path) => {
 
 app.on('open-url', (event, sshUrl) => {
   const lastWindow = app.getLastFocusedWindow();
-  const callback = (win: BrowserWindow) => win.rpc.emit('open ssh', sshUrl);
+  const callback = (win: BrowserWindow) => {
+    win.rpc.emit('open ssh', sshUrl);
+  };
   if (lastWindow) {
     callback(lastWindow);
   } else if (!lastWindow && {}.hasOwnProperty.call(app, 'createWindow')) {

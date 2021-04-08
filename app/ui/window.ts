@@ -51,7 +51,7 @@ export function newWindow(
   window.uid = classOpts.uid;
 
   const rpc = createRPC(window);
-  const sessions = new Map();
+  const sessions = new Map<string, Session>();
 
   const updateBackgroundColor = () => {
     const cfg_ = app.plugins.getDecoratedConfig();
@@ -98,7 +98,9 @@ export function newWindow(
     // If no callback is passed to createWindow,
     // a new session will be created by default.
     if (!fn) {
-      fn = (win: BrowserWindow) => win.rpc.emit('termgroup add req', {});
+      fn = (win: BrowserWindow) => {
+        win.rpc.emit('termgroup add req', {});
+      };
     }
 
     // app.windowCallback is the createWindow callback
@@ -187,11 +189,11 @@ export function newWindow(
       session.resize({cols, rows});
     }
   });
-  rpc.on('data', ({uid, data, escaped}) => {
+  rpc.on('data', ({uid, data, escaped}: {uid: string; data: string; escaped: boolean}) => {
     const session = sessions.get(uid);
     if (session) {
       if (escaped) {
-        const escapedData = session.shell.endsWith('cmd.exe')
+        const escapedData = session.shell?.endsWith('cmd.exe')
           ? `"${data}"` // This is how cmd.exe does it
           : `'${data.replace(/'/g, `'\\''`)}'`; // Inside a single-quoted string nothing is interpreted
 
@@ -206,12 +208,11 @@ export function newWindow(
     setRendererType(uid, type);
   });
   rpc.on('open external', ({url}) => {
-    shell.openExternal(url);
+    void shell.openExternal(url);
   });
   rpc.on('open context menu', (selection) => {
     const {createWindow} = app;
-    const {buildFromTemplate} = Menu;
-    buildFromTemplate(contextMenuTemplate(createWindow, selection)).popup({window});
+    Menu.buildFromTemplate(contextMenuTemplate(createWindow, selection)).popup({window});
   });
   rpc.on('open hamburger menu', ({x, y}) => {
     Menu.getApplicationMenu()!.popup({x: Math.ceil(x), y: Math.ceil(y)});
@@ -220,7 +221,9 @@ export function newWindow(
   // is maximized on Windows results in unmaximize, without hitting any
   // app buttons
   for (const ev of ['maximize', 'unmaximize', 'minimize', 'restore'] as any) {
-    window.on(ev, () => rpc.emit('windowGeometry change', {}));
+    window.on(ev, () => {
+      rpc.emit('windowGeometry change', {});
+    });
   }
   window.on('move', () => {
     const position = window.getPosition();
@@ -277,7 +280,7 @@ export function newWindow(
     const protocol = typeof url === 'string' && parseUrl(url).protocol;
     if (protocol === 'http:' || protocol === 'https:') {
       event.preventDefault();
-      shell.openExternal(url);
+      void shell.openExternal(url);
     }
   });
 

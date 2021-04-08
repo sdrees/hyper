@@ -13,7 +13,7 @@ import got from 'got';
 import ora from 'ora';
 import * as api from './api';
 
-let commandPromise: Promise<void>;
+let commandPromise: Promise<void> | undefined;
 
 const assertPluginName = (pluginName: string) => {
   if (!pluginName) {
@@ -84,8 +84,9 @@ const lsRemote = (pattern?: string) => {
   const URL = `https://api.npms.io/v2/search?q=${
     (pattern && `${pattern}+`) || ''
   }keywords:hyper-plugin,hyper-theme&size=250`;
+  type npmResult = {package: {name: string; description: string}};
   return got(URL)
-    .then((response) => JSON.parse(response.body).results as any[])
+    .then((response) => JSON.parse(response.body).results as npmResult[])
     .then((entries) => entries.map((entry) => entry.package))
     .then((entries) =>
       entries.map(({name, description}) => {
@@ -157,7 +158,7 @@ args.command(
   (name, args_) => {
     const pluginName = args_[0];
     assertPluginName(pluginName);
-    open(`http://ghub.io/${pluginName}`, {wait: false});
+    void open(`http://ghub.io/${pluginName}`, {wait: false});
     process.exit(0);
   },
   ['d', 'h', 'home']
@@ -231,7 +232,9 @@ const main = (argv: string[]) => {
   const child = spawn(process.execPath, args_, options);
 
   if (flags.verbose) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     child.stdout?.on('data', (data) => console.log(data.toString('utf8')));
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     child.stderr?.on('data', (data) => console.error(data.toString('utf8')));
   }
   if (flags.verbose) {
