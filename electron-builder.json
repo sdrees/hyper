@@ -54,7 +54,10 @@
     "rfc3161TimeStampServer": "http://timestamp.comodoca.com"
   },
   "nsis": {
-    "include": "build/win/installer.nsh"
+    "include": "build/win/installer.nsh",
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true
   },
   "mac": {
     "target": {
@@ -110,13 +113,15 @@
     "darkModeSupport": true
   },
   "deb": {
+    "compression": "bzip2",
     "afterInstall": "./build/linux/after-install.tpl"
   },
   "rpm": {
     "afterInstall": "./build/linux/after-install.tpl"
   },
   "snap": {
-    "confinement": "classic"
+    "confinement": "classic",
+    "publish": "github"
   },
   "protocols": {
     "name": "ssh URL",
